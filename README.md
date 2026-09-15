@@ -99,7 +99,7 @@ Use `--config path/to/policy.json` for an explicit configuration. Command-line s
 
 ## Releases
 
-The manually triggered **Release** workflow builds, tests and installs the package before publishing `v0.2.0` with a downloadable `.nupkg`. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.2.0.md).
+After successful main-branch CI, the **Release** workflow builds, tests and installs the exact tested commit before publishing `v0.2.0` with a downloadable `.nupkg`. It can also be triggered manually. Existing releases are never replaced. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.2.0.md).
 
 CI runs on Linux, Windows and macOS and installs the actual package before self-scanning this repository. Scanning never executes code from the target repository.
 

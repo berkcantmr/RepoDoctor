@@ -1,16 +1,23 @@
 name: Release
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
 permissions:
   contents: read
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -24,4 +31,9 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create v0.2.0 artifacts/*.nupkg --target "$GITHUB_SHA" --title "RepoDoctor v0.2.0" --notes-file docs/release-v0.2.0.md
+        run: |
+          if gh release view v0.2.0 >/dev/null 2>&1; then
+            echo "v0.2.0 already exists; preserving the published release."
+            exit 0
+          fi
+          gh release create v0.2.0 artifacts/*.nupkg --target "$(git rev-parse HEAD)" --title "RepoDoctor v0.2.0" --notes-file docs/release-v0.2.0.md
