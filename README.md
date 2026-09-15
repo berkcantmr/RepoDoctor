@@ -1,6 +1,10 @@
 # RepoDoctor
 
-RepoDoctor is a small .NET command-line tool that checks whether a repository contains the essential files and automation expected from a healthy open-source project.
+[![CI](https://github.com/berkcantmr/RepoDoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/berkcantmr/RepoDoctor/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/berkcantmr/RepoDoctor)](https://github.com/berkcantmr/RepoDoctor/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+A cross-platform .NET command-line tool that checks whether a repository contains the essential files and automation expected from a healthy open-source project.
 
 ## Current checks
 
