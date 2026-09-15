@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Text and JSON report formats.
 - Optional strict exit code for CI usage.
 - Unit test suite and GitHub Actions workflow.
+# 0.4.0
+
+- Add keyless NuGet.org trusted publishing through GitHub OIDC.
+- Validate immutable release tags against the package version before publishing.
+- Complete package metadata for NuGet.org discovery and provenance.
+
 # 0.3.0
 
 - Add a composite GitHub Action with configurable repository, report, and gating inputs.

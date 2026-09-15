@@ -1,0 +1,88 @@
+name: Publish to NuGet
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish
+        required: true
+        default: v0.4.0
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Validate tag input
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$') {
+            throw "Tag must be a semantic version beginning with v."
+          }
+
+      - name: Check out release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Verify tag and package version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          $actualTag = git describe --tags --exact-match
+          if ($actualTag -ne $env:RELEASE_TAG) {
+            throw "Checked-out commit is not tagged as $env:RELEASE_TAG."
+          }
+
+          $version = (dotnet msbuild src/RepoDoctor/RepoDoctor.csproj -getProperty:Version -nologo).Trim()
+          if ("v$version" -ne $env:RELEASE_TAG) {
+            throw "Package version $version does not match tag $env:RELEASE_TAG."
+          }
+
+      - name: Restore, build, and test
+        run: |
+          dotnet restore RepoDoctor.sln
+          dotnet build RepoDoctor.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+          dotnet test RepoDoctor.sln --configuration Release --no-build
+
+      - name: Pack
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release --no-build -p:ContinuousIntegrationBuild=true -p:RepositoryCommit=$commit
+
+      - name: Upload package evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package-${{ inputs.tag }}
+          path: artifacts/RepoDoctor.Tool.*.nupkg
+          if-no-files-found: error
+
+      - name: Get short-lived NuGet credential
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish package
+        run: >-
+          dotnet nuget push artifacts/RepoDoctor.Tool.*.nupkg
+          --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

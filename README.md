@@ -10,7 +10,7 @@ A cross-platform .NET command-line tool that checks whether a repository contain
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: berkcantmr/RepoDoctor@v0.3.0
+- uses: berkcantmr/RepoDoctor@v0.4.0
   with:
     min-score: 80
 ```
@@ -94,7 +94,7 @@ dotnet test RepoDoctor.sln --configuration Release --no-build
 
 ```bash
 dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release
-dotnet tool install --global --add-source artifacts RepoDoctor.Tool --version 0.3.0
+dotnet tool install --global --add-source artifacts RepoDoctor.Tool --version 0.4.0
 repodoctor scan .
 ```
 
@@ -114,7 +114,9 @@ Use `--config path/to/policy.json` for an explicit configuration. Command-line s
 
 ## Releases
 
-After successful main-branch CI, the **Release** workflow builds, tests and installs the exact tested commit before publishing `v0.3.0` with a downloadable `.nupkg`. It can also be triggered manually. Existing releases are never replaced. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.3.0.md).
+After successful main-branch CI, the **Release** workflow builds, tests and installs the exact tested commit before publishing `v0.4.0` with a downloadable `.nupkg`. Existing releases are never replaced. [Release notes](docs/release-v0.4.0.md).
+
+NuGet.org publication uses a separate, manually triggered OIDC trusted-publishing workflow. It requests a short-lived credential only after rebuilding and testing the selected release tag; no permanent API key is stored. Until the first NuGet publication succeeds, install the downloaded/local package with `--add-source` as shown above.
 
 CI runs on Linux, Windows and macOS and installs the actual package before self-scanning this repository. Scanning never executes code from the target repository.
 

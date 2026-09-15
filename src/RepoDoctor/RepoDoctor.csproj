@@ -4,17 +4,24 @@
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>repodoctor</AssemblyName>
     <RootNamespace>RepoDoctor</RootNamespace>
-    <Version>0.3.0</Version>
-    <Description>Audit a repository for essential open-source project files and automation.</Description>
+    <Version>0.4.0</Version>
+    <Title>RepoDoctor .NET Tool</Title>
+    <Description>Audit a repository for essential open-source project files and automation from the command line or GitHub Actions.</Description>
     <PackageId>RepoDoctor.Tool</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>repodoctor</ToolCommandName>
     <PackageOutputPath>../../artifacts</PackageOutputPath>
     <Authors>Berkcan Tümer</Authors>
+    <Copyright>Copyright (c) Berkcan Tümer 2026</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/berkcantmr/RepoDoctor</PackageProjectUrl>
     <RepositoryUrl>https://github.com/berkcantmr/RepoDoctor</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>cli;repository;opensource;audit</PackageTags>
+    <PackageTags>cli;repository;open-source;audit;dotnet-tool;github-actions</PackageTags>
+    <PackageReleaseNotes>GitHub Action support and secure NuGet trusted-publishing workflow. See https://github.com/berkcantmr/RepoDoctor/releases/tag/v0.4.0</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />

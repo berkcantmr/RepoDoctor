@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: berkcantmr/RepoDoctor@v0.3.0
+      - uses: berkcantmr/RepoDoctor@v0.4.0
         with:
           strict: true
 ```
 
-Use an immutable release tag such as `v0.3.0` for reproducible builds. Review release notes before upgrading.
+Use an immutable release tag such as `v0.4.0` for reproducible builds. Review release notes before upgrading.
 
 ## Inputs
 
@@ -41,7 +41,7 @@ Use an immutable release tag such as `v0.3.0` for reproducible builds. Review re
 Paths are resolved from `${{ github.workspace }}`. Parent directories for `output` must already exist. When `output` is set, upload it in a later workflow step if it should be retained:
 
 ```yaml
-- uses: berkcantmr/RepoDoctor@v0.3.0
+- uses: berkcantmr/RepoDoctor@v0.4.0
   with:
     format: markdown
     min-score: 80

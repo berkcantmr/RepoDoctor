@@ -44,7 +44,7 @@ jobs:
       - name: Install and smoke test packaged tool
         shell: pwsh
         run: |
-          dotnet tool install RepoDoctor.Tool --version 0.3.0 --tool-path ./.smoke-tools --add-source ./artifacts
+          dotnet tool install RepoDoctor.Tool --version 0.4.0 --tool-path ./.smoke-tools --add-source ./artifacts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./.smoke-tools/repodoctor --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
