@@ -10,7 +10,7 @@ internal sealed class TemporaryRepository : IDisposable
 
     public string Path { get; }
 
-    public void CreateFile(string relativePath, string content = "")
+    public void CreateFile(string relativePath, string content = "test content")
     {
         var path = System.IO.Path.Combine(Path, relativePath.Replace('/', System.IO.Path.DirectorySeparatorChar));
         var directory = System.IO.Path.GetDirectoryName(path);

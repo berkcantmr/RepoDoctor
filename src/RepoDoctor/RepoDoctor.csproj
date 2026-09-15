@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>repodoctor</AssemblyName>
     <RootNamespace>RepoDoctor</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Description>Audit a repository for essential open-source project files and automation.</Description>
     <PackageId>RepoDoctor.Tool</PackageId>
     <PackAsTool>true</PackAsTool>
@@ -13,5 +13,10 @@
     <Authors>Berkcan Tümer</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/berkcantmr/RepoDoctor</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>cli;repository;opensource;audit</PackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 </Project>

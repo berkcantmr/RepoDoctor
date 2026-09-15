@@ -14,6 +14,12 @@ RepoDoctor is a small .NET command-line tool that checks whether a repository co
 - Automated tests
 - Continuous integration
 - Git repository initialization
+- Editor configuration
+- Pull request template
+- Dependency update configuration
+- Issue templates
+
+Checks are offline filename-based heuristics, not a security audit or proof of project quality. [Configuration, check IDs and limitations](docs/configuration.md).
 
 ## Requirements
 
@@ -36,7 +42,7 @@ RepoDoctor report: /projects/example
 [WARN] License: Missing license.
        Next: Choose an open-source license and add it to the repository root.
 
-Score: 50/100 (5 passed, 5 warnings)
+Score: 50/100 (7 passed, 7 warnings)
 ```
 
 ## Commands
@@ -50,6 +56,15 @@ dotnet run --project src/RepoDoctor -- scan . --format json
 
 # Return exit code 1 when findings exist (useful in CI)
 dotnet run --project src/RepoDoctor -- scan . --strict
+
+# Save a Markdown report to a new file
+dotnet run --project src/RepoDoctor -- scan . --format markdown --output report.md
+
+# Fail CI below a minimum readiness score
+dotnet run --project src/RepoDoctor -- scan . --min-score 80
+
+# Discover IDs usable in disabledChecks
+dotnet run --project src/RepoDoctor -- --list-checks
 ```
 
 ## Build and test
@@ -64,16 +79,29 @@ dotnet test RepoDoctor.sln --configuration Release --no-build
 
 ```bash
 dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release
-dotnet tool install --global --add-source artifacts RepoDoctor.Tool
+dotnet tool install --global --add-source artifacts RepoDoctor.Tool --version 0.2.0
 repodoctor scan .
 ```
 
-## Roadmap
+## Configuration
 
-- Detect incomplete README sections
-- Support a configurable policy file
-- Add SARIF output for GitHub code scanning
-- Publish the tool to NuGet
+Create `.repodoctor.json` in the scanned repository (optional):
+
+```json
+{
+  "disabledChecks": ["git"],
+  "excludeDirectories": ["generated"],
+  "minScore": 80
+}
+```
+
+Use `--config path/to/policy.json` for an explicit configuration. Command-line score thresholds override configuration. Exit codes: **0** success, **1** failed strict/score gate, **2** usage/configuration/I/O error. Scan results without a gate return 0 even with warnings.
+
+## Releases
+
+The manually triggered **Release** workflow builds, tests and installs the package before publishing `v0.2.0` with a downloadable `.nupkg`. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.2.0.md).
+
+CI runs on Linux, Windows and macOS and installs the actual package before self-scanning this repository. Scanning never executes code from the target repository.
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 

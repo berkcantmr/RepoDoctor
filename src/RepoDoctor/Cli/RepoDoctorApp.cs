@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using RepoDoctor.Reporting;
 using RepoDoctor.Scanning;
 
@@ -37,6 +38,12 @@ public static class RepoDoctorApp
             return Task.FromResult(SuccessExitCode);
         }
 
+        if (options.ListChecks)
+        {
+            output.WriteLine(string.Join(Environment.NewLine, RepositoryScanner.CheckIds));
+            return Task.FromResult(SuccessExitCode);
+        }
+
         string fullPath;
         try
         {
@@ -54,15 +61,37 @@ public static class RepoDoctorApp
             return Task.FromResult(UsageErrorExitCode);
         }
 
-        var report = new RepositoryScanner().Scan(fullPath);
+        try
+        {
+        var configPath = options.Config is null ? Path.Combine(fullPath, ".repodoctor.json") : Path.GetFullPath(options.Config);
+        var configuration = options.Config is not null || File.Exists(configPath)
+            ? ScanConfiguration.Load(configPath) : new ScanConfiguration();
+        var report = new RepositoryScanner().Scan(fullPath, configuration);
         IReportWriter writer = options.Format switch
         {
             OutputFormat.Json => new JsonReportWriter(),
+            OutputFormat.Markdown => new MarkdownReportWriter(),
             _ => new TextReportWriter()
         };
 
-        output.WriteLine(writer.Write(report));
-        return Task.FromResult(options.Strict && report.HasFindings ? FindingsExitCode : SuccessExitCode);
+        var rendered = writer.Write(report);
+        if (options.Output is null) output.WriteLine(rendered);
+        else
+        {
+            // Never overwrite repository files or follow an existing output symlink.
+            using var stream = new FileStream(Path.GetFullPath(options.Output), FileMode.CreateNew, FileAccess.Write);
+            using var file = new StreamWriter(stream);
+            file.WriteLine(rendered);
+        }
+        var threshold = options.MinScore ?? configuration.MinScore;
+        return Task.FromResult((options.Strict && report.HasFindings) || (threshold.HasValue && report.Score < threshold.Value)
+            ? FindingsExitCode : SuccessExitCode);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or JsonException or NotSupportedException)
+        {
+            error.WriteLine($"Error: {exception.Message}");
+            return Task.FromResult(UsageErrorExitCode);
+        }
     }
 
     private static string GetVersion() =>
@@ -75,7 +104,11 @@ public static class RepoDoctorApp
           repodoctor [scan] [path] [options]
 
         Options:
-          --format <text|json>  Select the output format. Default: text
+          --format <text|json|markdown>  Select output format. Default: text
+          --config <path>       Load JSON configuration (default: <repo>/.repodoctor.json)
+          --output <path>       Write to a new file; existing files are never overwritten
+          --min-score <0-100>   Exit 1 below this score; overrides configuration
+          --list-checks        List supported check IDs
           --strict              Exit with code 1 when findings are present
           -h, --help            Show this help text
           -v, --version         Show the version

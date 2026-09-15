@@ -31,12 +31,39 @@ public static class CliParser
         var pathWasSet = false;
         var format = OutputFormat.Text;
         var strict = false;
+        string? config = null;
+        string? output = null;
+        int? minScore = null;
+        var listChecks = false;
 
         while (index < args.Length)
         {
             var current = args[index];
             switch (current)
             {
+                case "--help":
+                case "-h":
+                    return CliParseResult.Success(new CliOptions(".", OutputFormat.Text, false, ShowHelp: true));
+                case "--list-checks":
+                    listChecks = true;
+                    index++;
+                    break;
+                case "--config":
+                case "--output":
+                case "--min-score":
+                    if (index + 1 >= args.Length || args[index + 1].StartsWith('-'))
+                        return CliParseResult.Failure($"{current} requires a value.");
+                    var argument = args[index + 1];
+                    if (current == "--config") config = argument;
+                    else if (current == "--output") output = argument;
+                    else
+                    {
+                        if (!int.TryParse(argument, out var score) || score < 0 || score > 100)
+                            return CliParseResult.Failure("--min-score must be an integer between 0 and 100.");
+                        minScore = score;
+                    }
+                    index += 2;
+                    break;
                 case "--strict":
                     strict = true;
                     index++;
@@ -44,13 +71,14 @@ public static class CliParser
                 case "--format":
                     if (index + 1 >= args.Length)
                     {
-                        return CliParseResult.Failure("--format requires either 'text' or 'json'.");
+                        return CliParseResult.Failure("--format requires 'text', 'json' or 'markdown'.");
                     }
 
                     var value = args[index + 1];
-                    if (!Enum.TryParse<OutputFormat>(value, ignoreCase: true, out format))
+                    if (!Enum.GetNames<OutputFormat>().Contains(value, StringComparer.OrdinalIgnoreCase)
+                        || !Enum.TryParse<OutputFormat>(value, ignoreCase: true, out format))
                     {
-                        return CliParseResult.Failure($"Unsupported format '{value}'. Use 'text' or 'json'.");
+                        return CliParseResult.Failure($"Unsupported format '{value}'. Use 'text', 'json' or 'markdown'.");
                     }
 
                     index += 2;
@@ -73,7 +101,7 @@ public static class CliParser
             }
         }
 
-        return CliParseResult.Success(new CliOptions(path, format, strict));
+        return CliParseResult.Success(new CliOptions(path, format, strict, Config: config, Output: output, MinScore: minScore, ListChecks: listChecks));
     }
 }
 

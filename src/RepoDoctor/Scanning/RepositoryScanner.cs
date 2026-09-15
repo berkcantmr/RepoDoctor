@@ -10,12 +10,20 @@ public sealed class RepositoryScanner
         new("code-of-conduct", "Code of conduct", ["CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md"], "Add a code of conduct and an enforcement contact."),
         new("gitignore", ".gitignore", [".gitignore"], "Add a .gitignore appropriate for the project's technology stack."),
         new("security", "Security policy", ["SECURITY.md", ".github/SECURITY.md"], "Document how security vulnerabilities should be reported."),
-        new("changelog", "Changelog", ["CHANGELOG.md", "CHANGES.md", "HISTORY.md"], "Track notable changes in a changelog.")
+        new("changelog", "Changelog", ["CHANGELOG.md", "CHANGES.md", "HISTORY.md"], "Track notable changes in a changelog."),
+        new("editorconfig", "Editor configuration", [".editorconfig"], "Add .editorconfig for consistent formatting."),
+        new("pr-template", "Pull request template", [".github/pull_request_template.md", ".github/PULL_REQUEST_TEMPLATE.md", "PULL_REQUEST_TEMPLATE.md"], "Provide a pull request checklist."),
+        new("dependency-updates", "Dependency updates", [".github/dependabot.yml", ".github/dependabot.yaml", "renovate.json", ".github/renovate.json", "renovate.json5"], "Configure Dependabot or Renovate updates.")
     ];
 
-    public RepositoryReport Scan(string repositoryPath)
+    public static IReadOnlyList<string> CheckIds { get; } = Array.AsReadOnly(FileRules.Select(rule => rule.Id)
+        .Concat(["tests", "ci", "git", "issue-template"]).ToArray());
+
+    public RepositoryReport Scan(string repositoryPath, ScanConfiguration? configuration = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
+        configuration ??= new ScanConfiguration();
+        configuration.Validate();
 
         var fullPath = Path.GetFullPath(repositoryPath);
         if (!Directory.Exists(fullPath))
@@ -25,46 +33,52 @@ public sealed class RepositoryScanner
 
         var checks = new List<RepositoryCheck>();
         checks.AddRange(FileRules.Select(rule => EvaluateFileRule(fullPath, rule)));
-        checks.Add(EvaluateTests(fullPath));
-        checks.Add(EvaluateContinuousIntegration(fullPath));
+        var files = EnumerateFilesSafely(fullPath, configuration.ExcludeDirectories).ToArray();
+        checks.Add(EvaluateTests(fullPath, files));
+        checks.Add(EvaluateContinuousIntegration(fullPath, files));
         checks.Add(EvaluateGitRepository(fullPath));
+        var hasIssueTemplate = files.Any(file => file.StartsWith(".github/ISSUE_TEMPLATE/", StringComparison.OrdinalIgnoreCase)
+            && !Path.GetFileName(file).Equals("config.yml", StringComparison.OrdinalIgnoreCase)
+            && Path.GetExtension(file).ToLowerInvariant() is ".md" or ".yml" or ".yaml");
+        checks.Add(hasIssueTemplate
+            ? Passed("issue-template", "Issue templates", "Found an issue template.")
+            : Warning("issue-template", "Issue templates", "No issue template found.", "Add a bug report or feature request template under .github/ISSUE_TEMPLATE/."));
 
-        return new RepositoryReport(fullPath, checks);
+        return new RepositoryReport(fullPath, checks.Where(check => !configuration.DisabledChecks.Contains(check.Id)).ToArray());
     }
 
     private static RepositoryCheck EvaluateFileRule(string root, FileRule rule)
     {
-        var match = rule.Candidates.FirstOrDefault(candidate => File.Exists(ToSystemPath(root, candidate)));
+        var match = rule.Candidates.FirstOrDefault(candidate => IsNonEmptyRegularFile(root, ToSystemPath(root, candidate)));
         return match is not null
             ? Passed(rule.Id, rule.Name, $"Found {match}.")
             : Warning(rule.Id, rule.Name, $"Missing {rule.Name.ToLowerInvariant()}.", rule.Recommendation);
     }
 
-    private static RepositoryCheck EvaluateTests(string root)
+    private static RepositoryCheck EvaluateTests(string root, string[] files)
     {
-        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", "bin", "obj", "node_modules" };
-        var hasTestProject = EnumerateDirectoriesSafely(root)
-            .Where(directory => !ContainsExcludedSegment(root, directory, excluded))
-            .SelectMany(directory => Directory.EnumerateFiles(directory, "*.*proj", SearchOption.TopDirectoryOnly))
+        var hasTestProject = files.Where(file => file.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
             .Any(file => Path.GetFileNameWithoutExtension(file).Contains("test", StringComparison.OrdinalIgnoreCase));
 
-        var hasConventionalTestDirectory = new[] { "test", "tests", "spec", "specs" }
-            .Any(directory => Directory.Exists(Path.Combine(root, directory)));
+        var hasConventionalTestDirectory = files.Any(file => file.Split('/').SkipLast(1)
+            .Any(segment => new[] { "test", "tests", "spec", "specs", "__tests__" }.Contains(segment, StringComparer.OrdinalIgnoreCase))
+            && new[] { ".cs", ".fs", ".js", ".jsx", ".ts", ".tsx", ".py", ".go", ".rs", ".java", ".rb" }.Contains(Path.GetExtension(file)))
+            || files.Any(file => Path.GetFileName(file).StartsWith("test_", StringComparison.OrdinalIgnoreCase) && file.EndsWith(".py"))
+            || files.Any(file => file.EndsWith("_test.go") || file.EndsWith(".test.ts") || file.EndsWith(".test.js") || file.EndsWith(".spec.ts"));
 
         return hasTestProject || hasConventionalTestDirectory
             ? Passed("tests", "Automated tests", "Found a test project or conventional test directory.")
             : Warning("tests", "Automated tests", "No test project or conventional test directory found.", "Add automated tests for the project's important behavior.");
     }
 
-    private static RepositoryCheck EvaluateContinuousIntegration(string root)
+    private static RepositoryCheck EvaluateContinuousIntegration(string root, string[] files)
     {
-        var workflowDirectory = Path.Combine(root, ".github", "workflows");
-        var hasGitHubWorkflow = Directory.Exists(workflowDirectory)
-            && Directory.EnumerateFiles(workflowDirectory, "*.*", SearchOption.TopDirectoryOnly)
-                .Any(file => Path.GetExtension(file) is ".yml" or ".yaml");
+        var hasGitHubWorkflow = files.Any(file => file.StartsWith(".github/workflows/", StringComparison.Ordinal)
+            && file.Split('/').Length == 3 && Path.GetExtension(file).ToLowerInvariant() is ".yml" or ".yaml"
+            && IsNonEmptyRegularFile(root, ToSystemPath(root, file)));
 
         var hasOtherCi = new[] { ".gitlab-ci.yml", "azure-pipelines.yml", ".circleci/config.yml", "Jenkinsfile" }
-            .Any(candidate => File.Exists(ToSystemPath(root, candidate)));
+            .Any(candidate => IsNonEmptyRegularFile(root, ToSystemPath(root, candidate)));
 
         return hasGitHubWorkflow || hasOtherCi
             ? Passed("ci", "Continuous integration", "Found a CI configuration.")
@@ -76,38 +90,36 @@ public sealed class RepositoryScanner
             ? Passed("git", "Git repository", "Found Git repository metadata.")
             : Warning("git", "Git repository", "The directory is not initialized as a Git repository.", "Run 'git init' in the repository root.");
 
-    private static IEnumerable<string> EnumerateDirectoriesSafely(string root)
+    private static bool IsNonEmptyRegularFile(string root, string path)
     {
-        yield return root;
+        var file = new FileInfo(path);
+        if (!file.Exists || (file.Attributes & FileAttributes.ReparsePoint) != 0) return false;
+        for (var parent = file.Directory; parent is not null && parent.FullName != Path.TrimEndingDirectorySeparator(root); parent = parent.Parent)
+            if ((parent.Attributes & FileAttributes.ReparsePoint) != 0) return false;
+        return file.Length > 0;
+    }
 
+    private static IEnumerable<string> EnumerateFilesSafely(string root, string[] additionalExclusions)
+    {
+        var excluded = new HashSet<string>(new[] { ".git", "bin", "obj", "node_modules", "vendor", ".venv", "venv", "dist", "coverage" }
+            .Concat(additionalExclusions), StringComparer.OrdinalIgnoreCase);
         var pending = new Stack<string>();
         pending.Push(root);
+        var count = 0;
         while (pending.Count > 0)
         {
             var current = pending.Pop();
-            IEnumerable<string> children;
-            try
+            foreach (var entry in new DirectoryInfo(current).EnumerateFileSystemInfos().OrderBy(item => item.Name, StringComparer.Ordinal))
             {
-                children = Directory.EnumerateDirectories(current);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                continue;
-            }
-
-            foreach (var child in children)
-            {
-                yield return child;
-                pending.Push(child);
+                if (++count > 100_000) throw new IOException("Repository scan exceeded 100,000 entries. Configure excludeDirectories to narrow the scan.");
+                if ((entry.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                if (entry is DirectoryInfo)
+                {
+                    if (!excluded.Contains(entry.Name)) pending.Push(entry.FullName);
+                }
+                else yield return Path.GetRelativePath(root, entry.FullName).Replace(Path.DirectorySeparatorChar, '/');
             }
         }
-    }
-
-    private static bool ContainsExcludedSegment(string root, string directory, HashSet<string> excluded)
-    {
-        var relative = Path.GetRelativePath(root, directory);
-        return relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(excluded.Contains);
     }
 
     private static string ToSystemPath(string root, string relativePath) =>

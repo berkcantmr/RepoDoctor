@@ -12,7 +12,7 @@ public sealed class RepositoryScannerTests
 
         var report = new RepositoryScanner().Scan(repository.Path);
 
-        Assert.Equal(10, report.Checks.Count);
+        Assert.Equal(14, report.Checks.Count);
         Assert.Equal(0, report.Score);
         Assert.All(report.Checks, check => Assert.Equal(CheckStatus.Warning, check.Status));
     }
@@ -28,6 +28,10 @@ public sealed class RepositoryScannerTests
         repository.CreateFile(".gitignore");
         repository.CreateFile("SECURITY.md");
         repository.CreateFile("CHANGELOG.md");
+        repository.CreateFile(".editorconfig");
+        repository.CreateFile(".github/pull_request_template.md");
+        repository.CreateFile(".github/dependabot.yml");
+        repository.CreateFile(".github/ISSUE_TEMPLATE/bug.md");
         repository.CreateFile("tests/Sample.Tests/Sample.Tests.csproj");
         repository.CreateFile(".github/workflows/ci.yml");
         repository.CreateDirectory(".git");
