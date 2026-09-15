@@ -15,4 +15,4 @@ dotnet tool install --global RepoDoctor.Tool --version 0.4.0
 repodoctor scan .
 ```
 
-The NuGet workflow requires a repository variable named `NUGET_USER` and a nuget.org trusted-publishing policy for `berkcantmr/RepoDoctor` and `publish-nuget.yml`. It stores no long-lived API key.
+The NuGet workflow requires a nuget.org trusted-publishing policy for the `berkcantmr` account, `berkcantmr/RepoDoctor`, and `publish-nuget.yml`. It stores no long-lived API key.
