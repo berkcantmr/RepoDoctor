@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>repodoctor</AssemblyName>
+    <RootNamespace>RepoDoctor</RootNamespace>
+    <Version>0.1.0</Version>
+    <Description>Audit a repository for essential open-source project files and automation.</Description>
+    <PackageId>RepoDoctor.Tool</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>repodoctor</ToolCommandName>
+    <PackageOutputPath>../../artifacts</PackageOutputPath>
+    <Authors>Berkcan Tümer</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/berkcantmr/RepoDoctor</RepositoryUrl>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: tests/RepoDoctor.Tests/RepoDoctor.Tests.csproj
+
+      - name: Restore dependencies
+        run: dotnet restore RepoDoctor.sln
+
+      - name: Build
+        run: dotnet build RepoDoctor.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test RepoDoctor.sln --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Pack tool
+        run: dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release --no-build
