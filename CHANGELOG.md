@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Text and JSON report formats.
 - Optional strict exit code for CI usage.
 - Unit test suite and GitHub Actions workflow.
+# 0.3.0
+
+- Add a composite GitHub Action with configurable repository, report, and gating inputs.
+- Exercise the Action on Linux, Windows, and macOS in CI.
+- Document immutable version pinning and report artifact usage.
+
 # 0.2.0
 
 - Expand to 14 checks, configurable exclusions/disabled checks and score gates.

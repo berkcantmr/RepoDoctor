@@ -44,7 +44,7 @@ jobs:
       - name: Install and smoke test packaged tool
         shell: pwsh
         run: |
-          dotnet tool install RepoDoctor.Tool --version 0.2.0 --tool-path ./.smoke-tools --add-source ./artifacts
+          dotnet tool install RepoDoctor.Tool --version 0.3.0 --tool-path ./.smoke-tools --add-source ./artifacts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./.smoke-tools/repodoctor --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -52,6 +52,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $report = Get-Content smoke-report.json -Raw | ConvertFrom-Json
           if ($report.score -ne 100) { throw 'Self scan must score 100' }
+
+      - name: Use the repository as a GitHub Action
+        uses: ./
+        with:
+          path: .
+          format: json
+          strict: true
+          min-score: 100
+          output: action-report.json
+
+      - name: Validate Action report
+        shell: pwsh
+        run: |
+          $report = Get-Content action-report.json -Raw | ConvertFrom-Json
+          if ($report.score -ne 100) { throw 'Action self scan must score 100' }
 
       - name: Upload package and test results
         if: always()
@@ -62,3 +77,4 @@ jobs:
             artifacts/*.nupkg
             TestResults/
             smoke-report.json
+            action-report.json

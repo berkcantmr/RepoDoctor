@@ -1,0 +1,77 @@
+name: RepoDoctor repository audit
+description: Audit a repository for common open-source project essentials.
+author: Berkcan Tümer
+
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  path:
+    description: Repository path to scan, relative to the GitHub workspace.
+    required: false
+    default: .
+  format:
+    description: Report format (text, json, or markdown).
+    required: false
+    default: text
+  strict:
+    description: Fail when any enabled check produces a warning.
+    required: false
+    default: "false"
+  min-score:
+    description: Fail when the readiness score is below this value (0-100).
+    required: false
+    default: ""
+  config:
+    description: Optional path to a RepoDoctor JSON configuration file.
+    required: false
+    default: ""
+  output:
+    description: Optional path for a new report file. Existing files are not overwritten.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: ${{ github.action_path }}/global.json
+
+    - name: Run RepoDoctor
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        REPODOCTOR_PATH: ${{ inputs.path }}
+        REPODOCTOR_FORMAT: ${{ inputs.format }}
+        REPODOCTOR_STRICT: ${{ inputs.strict }}
+        REPODOCTOR_MIN_SCORE: ${{ inputs.min-score }}
+        REPODOCTOR_CONFIG: ${{ inputs.config }}
+        REPODOCTOR_OUTPUT: ${{ inputs.output }}
+      run: |
+        $arguments = @(
+          "run",
+          "--project", (Join-Path $env:GITHUB_ACTION_PATH "src/RepoDoctor/RepoDoctor.csproj"),
+          "--configuration", "Release",
+          "--",
+          "scan", $env:REPODOCTOR_PATH,
+          "--format", $env:REPODOCTOR_FORMAT
+        )
+
+        if ($env:REPODOCTOR_STRICT -eq "true") {
+          $arguments += "--strict"
+        }
+        if (-not [string]::IsNullOrWhiteSpace($env:REPODOCTOR_MIN_SCORE)) {
+          $arguments += @("--min-score", $env:REPODOCTOR_MIN_SCORE)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($env:REPODOCTOR_CONFIG)) {
+          $arguments += @("--config", $env:REPODOCTOR_CONFIG)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($env:REPODOCTOR_OUTPUT)) {
+          $arguments += @("--output", $env:REPODOCTOR_OUTPUT)
+        }
+
+        & dotnet @arguments
+        exit $LASTEXITCODE

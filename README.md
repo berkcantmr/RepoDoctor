@@ -6,6 +6,17 @@
 
 A cross-platform .NET command-line tool that checks whether a repository contains the essential files and automation expected from a healthy open-source project.
 
+## Use in GitHub Actions
+
+```yaml
+- uses: actions/checkout@v4
+- uses: berkcantmr/RepoDoctor@v0.3.0
+  with:
+    min-score: 80
+```
+
+The Action supports strict mode, JSON/Markdown reports, configuration files, and report artifacts. See the [complete GitHub Action guide](docs/github-action.md).
+
 ## Current checks
 
 - README
@@ -83,7 +94,7 @@ dotnet test RepoDoctor.sln --configuration Release --no-build
 
 ```bash
 dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release
-dotnet tool install --global --add-source artifacts RepoDoctor.Tool --version 0.2.0
+dotnet tool install --global --add-source artifacts RepoDoctor.Tool --version 0.3.0
 repodoctor scan .
 ```
 
@@ -103,7 +114,7 @@ Use `--config path/to/policy.json` for an explicit configuration. Command-line s
 
 ## Releases
 
-After successful main-branch CI, the **Release** workflow builds, tests and installs the exact tested commit before publishing `v0.2.0` with a downloadable `.nupkg`. It can also be triggered manually. Existing releases are never replaced. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.2.0.md).
+After successful main-branch CI, the **Release** workflow builds, tests and installs the exact tested commit before publishing `v0.3.0` with a downloadable `.nupkg`. It can also be triggered manually. Existing releases are never replaced. It does not publish to NuGet.org; the commands above install a locally built/downloaded package. [Release notes](docs/release-v0.3.0.md).
 
 CI runs on Linux, Windows and macOS and installs the actual package before self-scanning this repository. Scanning never executes code from the target repository.
 
