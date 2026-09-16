@@ -36,7 +36,7 @@ jobs:
           ref: refs/tags/${{ inputs.tag }}
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
