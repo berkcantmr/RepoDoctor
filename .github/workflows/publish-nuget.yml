@@ -68,7 +68,7 @@ jobs:
           dotnet pack src/RepoDoctor/RepoDoctor.csproj --configuration Release --no-build -p:ContinuousIntegrationBuild=true -p:RepositoryCommit=$commit
 
       - name: Upload package evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-package-${{ inputs.tag }}
           path: artifacts/RepoDoctor.Tool.*.nupkg
