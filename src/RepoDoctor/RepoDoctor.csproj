@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>repodoctor</AssemblyName>
     <RootNamespace>RepoDoctor</RootNamespace>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Title>RepoDoctor .NET Tool</Title>
     <Description>Audit a repository for essential open-source project files and automation from the command line or GitHub Actions.</Description>
     <PackageId>RepoDoctor.Tool</PackageId>
@@ -21,7 +21,7 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>cli;repository;open-source;audit;dotnet-tool;github-actions</PackageTags>
-    <PackageReleaseNotes>GitHub Action support and secure NuGet trusted-publishing workflow. See https://github.com/berkcantmr/RepoDoctor/releases/tag/v0.4.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Dependency refresh for GitHub Actions and test infrastructure, including Node.js 24-based Actions. See https://github.com/berkcantmr/RepoDoctor/releases/tag/v0.5.0</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />

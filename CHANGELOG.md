@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+
+### Changed
+
+- Upgrade GitHub Actions dependencies to their Node.js 24-based major releases.
+- Upgrade xUnit, Coverlet and Microsoft.NET.Test.Sdk test infrastructure.
+- Document the self-hosted runner compatibility requirement.
+- Promote the verified NuGet.org installation command in the README.
+
+## [0.4.0] - 2026-09-15
+
+- Add keyless NuGet.org trusted publishing through GitHub OIDC.
+- Validate immutable release tags against the package version before publishing.
+- Complete package metadata for NuGet.org discovery and provenance.
+
+## [0.3.0] - 2026-09-15
+
+- Add a composite GitHub Action with configurable repository, report, and gating inputs.
+- Exercise the Action on Linux, Windows, and macOS in CI.
+- Document immutable version pinning and report artifact usage.
+
+## [0.2.0] - 2026-09-15
+
+- Expand to 14 checks, configurable exclusions/disabled checks and score gates.
+- Add Markdown reporting, safe file output and check discovery.
+- Fix traversal pruning, symlink cycles, empty-file false positives and numeric format acceptance.
+- Add cross-platform package smoke tests and manual GitHub release workflow.
+- Preserve exit codes; default scores may change because four checks were added.
+
 ## [0.1.0] - 2026-09-15
 
 ### Added
@@ -14,22 +43,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Text and JSON report formats.
 - Optional strict exit code for CI usage.
 - Unit test suite and GitHub Actions workflow.
-# 0.4.0
-
-- Add keyless NuGet.org trusted publishing through GitHub OIDC.
-- Validate immutable release tags against the package version before publishing.
-- Complete package metadata for NuGet.org discovery and provenance.
-
-# 0.3.0
-
-- Add a composite GitHub Action with configurable repository, report, and gating inputs.
-- Exercise the Action on Linux, Windows, and macOS in CI.
-- Document immutable version pinning and report artifact usage.
-
-# 0.2.0
-
-- Expand to 14 checks, configurable exclusions/disabled checks and score gates.
-- Add Markdown reporting, safe file output and check discovery.
-- Fix traversal pruning, symlink cycles, empty-file false positives and numeric format acceptance.
-- Add cross-platform package smoke tests and manual GitHub release workflow.
-- Preserve exit codes; default scores may change because four checks were added.
